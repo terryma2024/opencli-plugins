@@ -1,0 +1,40 @@
+{
+  "name": "opencli-plugin-ctrip-flights",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "OpenCLI plugin for querying Ctrip flight information",
+  "keywords": ["opencli", "plugin", "ctrip", "flight", "travel"],
+  "author": "Terry Ma",
+  "license": "MIT",
+  "peerDependencies": {
+    "@jackwener/opencli": ">=1.7.3"
+  },
+  "opencli": {
+    "commands": {
+      "query": {
+        "description": "Query flight information from Ctrip",
+        "usage": "opencli ctrip-flights query --dep <出发地> --arr <目的地> --date <日期>",
+        "handler": "./query.ts",
+        "options": {
+          "dep": {
+            "type": "string",
+            "description": "出发地（中文城市名）",
+            "alias": "d",
+            "required": true
+          },
+          "arr": {
+            "type": "string",
+            "description": "目的地（中文城市名）",
+            "alias": "a",
+            "required": true
+          },
+          "date": {
+            "type": "string",
+            "description": "出发日期（格式YYYY-MM-DD）",
+            "required": true
+          }
+        }
+      }
+    }
+  }
+}
