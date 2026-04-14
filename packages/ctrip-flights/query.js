@@ -62,9 +62,9 @@ export default async function query(options) {
     console.log(`⌛ 等待页面加载...`);
     execSync('opencli browser wait time 15'); // 延长等待时间到15秒，确保航班列表加载完成
     
-    // 自动滚动加载更多内容，滚动3次，每次等待3秒
+    // 自动滚动加载更多内容，滚动5次，每次等待3秒，确保加载完所有懒加载航班
     console.log(`🔄 自动滚动加载更多航班...`);
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       execSync('opencli browser eval "window.scrollTo(0, document.body.scrollHeight)"');
       execSync('opencli browser wait time 3');
     }
@@ -153,13 +153,23 @@ export default async function query(options) {
         }
       }
       
-      return JSON.stringify(flights.slice(0, 10));
+      return JSON.stringify(flights); // 返回所有匹配的航班，后端再做数量限制
     })()"`, { encoding: 'utf8' });
     
     execSync('opencli browser close', { stdio: 'ignore' });
     
     console.log(`🔍 原始返回结果: ${result.trim()}`);
-    const flights = JSON.parse(result.trim());
+    let flights = JSON.parse(result.trim());
+    
+    // 最多返回100条
+    flights = flights.slice(0, 100);
+    
+    // 按起飞时间从早到晚排序
+    flights.sort((a, b) => {
+      const [aHours, aMinutes] = a.depTime.split(':').map(Number);
+      const [bHours, bMinutes] = b.depTime.split(':').map(Number);
+      return aHours * 60 + aMinutes - (bHours * 60 + bMinutes);
+    });
     
     if (!flights || flights.length === 0) {
       console.log('❌ 未查询到符合条件的航班信息');
@@ -171,7 +181,7 @@ export default async function query(options) {
       return;
     }
     
-    console.log(`\n✅ 查询到 ${flights.length} 个航班：\n`);
+    console.log(`\n✅ 查询到 ${flights.length} 个航班（按起飞时间从早到晚排序）：\n`);
     console.log('航空公司\t航班号\t\t起飞时间\t到达时间\t价格\t舱位');
     console.log('----------------------------------------------------------------------------------------');
     flights.forEach(f => {
