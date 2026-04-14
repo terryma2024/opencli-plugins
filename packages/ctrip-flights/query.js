@@ -60,7 +60,7 @@ export default async function query(options) {
     execSync('opencli browser close', { stdio: 'ignore' });
     execSync(`opencli browser open "${url}"`);
     console.log(`⌛ 等待页面加载...`);
-    execSync('opencli browser wait time 10');
+    execSync('opencli browser wait time 15'); // 延长等待时间到15秒，确保航班列表加载完成
     
     // 先输出页面标题和部分内容，调试用
     const pageTitle = execSync(`opencli browser eval "document.title"`, { encoding: 'utf8' }).trim();
@@ -71,63 +71,83 @@ export default async function query(options) {
     
     const result = execSync(`opencli browser eval "(() => {
       const flights = [];
-      // 尝试用新的选择器匹配携程最新的航班列表结构
-      const flightItems = document.querySelectorAll('.flight-item, .flight-list-item, [class*=flight-card]');
-      console.log('找到航班元素数量:', flightItems.length);
+      const text = document.body.innerText;
+      const lines = text.split('\\\\n').map(l => l.trim()).filter(l => l);
       
-      if (flightItems.length > 0) {
-        flightItems.forEach(item => {
-          try {
-            const airline = item.querySelector('[class*=airline-name]')?.innerText?.trim();
-            const flightNo = item.querySelector('[class*=flight-no]')?.innerText?.trim();
-            const depTime = item.querySelector('[class*=dep-time]')?.innerText?.trim();
-            const arrTime = item.querySelector('[class*=arr-time]')?.innerText?.trim();
-            const price = item.querySelector('[class*=price]')?.innerText?.trim();
-            const cabin = item.querySelector('[class*=cabin]')?.innerText?.trim();
-            
-            if (airline && flightNo && depTime && arrTime && price) {
-              flights.push({ airline, flightNo, depTime, arrTime, price, cabin });
-            }
-          } catch (e) {
-            console.log('解析航班项失败:', e);
-          }
-        });
-      }
+      let currentFlight = null;
+      let state = 'lookForAirline'; // 状态机：找航空公司 -> 找航班号 -> 找起飞时间 -> 找到达时间 -> 找价格 -> 找舱位
       
-      // 如果用选择器没找到，再尝试用文本匹配的方式
-      if (flights.length === 0) {
-        const text = document.body.innerText;
-        const lines = text.split('\\\\n');
-        let currentFlight = null;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
         
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim();
-          if (!line) continue;
-          
-          const flightMatch = line.match(/([\\\\u4e00-\\\\u9fa5]+航空)\\\\s+([A-Z0-9]+)\\\\s+(.*?)\\\\s+(\\\\d{2}:\\\\d{2})\\\\s+(.*?)\\\\s+(\\\\d{2}:\\\\d{2})\\\\s+(.*)/);
-          if (flightMatch) {
-            if (currentFlight) flights.push(currentFlight);
+        if (state === 'lookForAirline') {
+          // 匹配航空公司：以航空、航司结尾的中文
+          if (/.*(航空|航司|航空股份|航空集团)$/.test(line) && line.length < 10) {
             currentFlight = {
-              airline: flightMatch[1],
-              flightNo: flightMatch[2],
-              depTime: flightMatch[4],
-              arrTime: flightMatch[6],
+              airline: line,
+              flightNo: null,
+              depTime: null,
+              arrTime: null,
               price: null,
-              cabin: null,
+              cabin: null
             };
+            state = 'lookForFlightNo';
           }
-          
-          const priceMatch = line.match(/¥\\\\s*(\\\\d+)起?\\\\s*(.*)/);
-          if (priceMatch && currentFlight && !currentFlight.price) {
+        } else if (state === 'lookForFlightNo') {
+          // 匹配航班号：2个大写字母 + 数字
+          const flightNoMatch = line.match(/^([A-Z]{2}[0-9]+)/);
+          if (flightNoMatch) {
+            currentFlight.flightNo = flightNoMatch[1];
+            state = 'lookForDepTime';
+          } else if (/.*(航空|航司)$/.test(line)) {
+            // 遇到下一个航空公司，丢弃当前不完整的
+            currentFlight = {
+              airline: line,
+              flightNo: null,
+              depTime: null,
+              arrTime: null,
+              price: null,
+              cabin: null
+            };
+            state = 'lookForFlightNo';
+          }
+        } else if (state === 'lookForDepTime') {
+          // 匹配起飞时间：HH:MM格式
+          const timeMatch = line.match(/^([0-2][0-9]):([0-5][0-9])$/);
+          if (timeMatch) {
+            currentFlight.depTime = line;
+            state = 'lookForArrTime';
+          }
+        } else if (state === 'lookForArrTime') {
+          // 匹配到达时间：HH:MM格式，可能带+1天
+          const timeMatch = line.match(/^([0-2][0-9]):([0-5][0-9])(\\+1天)?$/);
+          if (timeMatch) {
+            currentFlight.arrTime = line;
+            state = 'lookForPrice';
+          }
+        } else if (state === 'lookForPrice') {
+          // 匹配价格：¥开头，后面数字
+          const priceMatch = line.match(/^¥(\\d+)起?$/);
+          if (priceMatch) {
             currentFlight.price = '¥' + priceMatch[1];
-            currentFlight.cabin = priceMatch[2] || '';
+            state = 'lookForCabin';
+          }
+        } else if (state === 'lookForCabin') {
+          // 匹配舱位：包含经济舱、公务舱、头等舱、商务舱等关键词
+          if (/.*(经济舱|公务舱|头等舱|商务舱|超级经济舱|折扣经济舱)/.test(line)) {
+            currentFlight.cabin = line;
+            // 完成一个航班的解析
+            if (currentFlight.airline && currentFlight.flightNo && currentFlight.depTime && currentFlight.arrTime && currentFlight.price) {
+              flights.push({...currentFlight});
+            }
+            // 重置状态，找下一个航班
+            currentFlight = null;
+            state = 'lookForAirline';
           }
         }
-        
-        if (currentFlight) flights.push(currentFlight);
       }
       
-      return JSON.stringify(flights.filter(f => f.flightNo && f.price).slice(0, 10));
+      return JSON.stringify(flights.slice(0, 10));
     })()"`, { encoding: 'utf8' });
     
     execSync('opencli browser close', { stdio: 'ignore' });
@@ -137,8 +157,11 @@ export default async function query(options) {
     
     if (!flights || flights.length === 0) {
       console.log('❌ 未查询到符合条件的航班信息');
-      console.log('💡 若您输入的是中文城市名可能无法识别，建议直接使用三位IATA机场编码');
-      console.log('   例如：PEK(北京)、SHA(上海虹桥)、PVG(上海浦东)、CAN(广州)、CTU(成都)等');
+      console.log('💡 可能的原因：');
+      console.log('   1. 输入的日期是过去的日期，请使用未来的日期查询');
+      console.log('   2. 中文城市名无法识别，建议直接使用三位IATA机场编码');
+      console.log('   3. 当前航线无可用航班');
+      console.log('   示例：PEK(北京)、SHA(上海虹桥)、PVG(上海浦东)、CAN(广州)、CTU(成都)等');
       return;
     }
     
@@ -154,7 +177,9 @@ export default async function query(options) {
     
   } catch (e) {
     console.error('❌ 查询失败:', e.stderr?.toString() || e.message);
-    execSync('opencli browser close', { stdio: 'ignore' });
+    try {
+      execSync('opencli browser close', { stdio: 'ignore' });
+    } catch (closeErr) {}
     throw new Error(`Query failed: ${e.stderr?.toString() || e.message}`);
   }
 }
