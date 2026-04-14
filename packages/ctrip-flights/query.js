@@ -45,9 +45,9 @@ export default async function query(options) {
   if (!dep || !arr || !date) {
     console.log('使用方法: opencli ctrip-flights query --dep <出发地> --arr <目的地> --date <日期>');
     console.log('支持中文城市名或三位IATA机场编码（例如：PEK=北京，SHA=上海，CAN=广州）');
-    console.log('示例: opencli ctrip-flights query --dep 哈尔滨 --arr 上海 --date 2026-05-06');
+    console.log('示例: opencli ctrip-flights query --dep 哈尔滨 --arr 上海 --date 2026-05-01');
     console.log('示例: opencli ctrip-flights query --dep PEK --arr CAN --date 2026-06-01');
-    process.exit(1);
+    throw new Error('Missing required parameters');
   }
 
   const depCode = cityMap[dep] || dep.toLowerCase();
@@ -113,7 +113,7 @@ export default async function query(options) {
               depTime: flightMatch[4],
               arrTime: flightMatch[6],
               price: null,
-              cabin: null
+              cabin: null,
             };
           }
           
@@ -155,6 +155,6 @@ export default async function query(options) {
   } catch (e) {
     console.error('❌ 查询失败:', e.stderr?.toString() || e.message);
     execSync('opencli browser close', { stdio: 'ignore' });
-    process.exit(1);
+    throw new Error(`Query failed: ${e.stderr?.toString() || e.message}`);
   }
 }

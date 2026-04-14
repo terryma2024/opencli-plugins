@@ -3,7 +3,15 @@
   "version": "0.1.1",
   "type": "module",
   "description": "OpenCLI plugin for querying Ctrip flight information, supports Chinese city names and IATA airport codes",
-  "keywords": ["opencli", "plugin", "ctrip", "flight", "travel", "airport", "iata"],
+  "keywords": [
+    "opencli",
+    "plugin",
+    "ctrip",
+    "flight",
+    "travel",
+    "airport",
+    "iata"
+  ],
   "author": "Terry Ma",
   "license": "MIT",
   "scripts": {
@@ -13,7 +21,8 @@
     "@jackwener/opencli": ">=1.7.3"
   },
   "devDependencies": {
-    "vitest": "^1.0.0"
+    "@jackwener/opencli": "^1.7.3",
+    "vitest": "^1.6.1"
   },
   "opencli": {
     "commands": {
