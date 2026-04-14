@@ -1,9 +1,9 @@
 {
   "name": "opencli-plugin-ctrip-flights",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
-  "description": "OpenCLI plugin for querying Ctrip flight information",
-  "keywords": ["opencli", "plugin", "ctrip", "flight", "travel"],
+  "description": "OpenCLI plugin for querying Ctrip flight information, supports Chinese city names and IATA airport codes",
+  "keywords": ["opencli", "plugin", "ctrip", "flight", "travel", "airport", "iata"],
   "author": "Terry Ma",
   "license": "MIT",
   "peerDependencies": {
@@ -12,19 +12,19 @@
   "opencli": {
     "commands": {
       "query": {
-        "description": "Query flight information from Ctrip",
+        "description": "Query flight information from Ctrip, supports Chinese city names or IATA airport codes",
         "usage": "opencli ctrip-flights query --dep <出发地> --arr <目的地> --date <日期>",
         "handler": "./query.ts",
         "options": {
           "dep": {
             "type": "string",
-            "description": "出发地（中文城市名）",
+            "description": "出发地（中文城市名或三位IATA机场编码）",
             "alias": "d",
             "required": true
           },
           "arr": {
             "type": "string",
-            "description": "目的地（中文城市名）",
+            "description": "目的地（中文城市名或三位IATA机场编码）",
             "alias": "a",
             "required": true
           },

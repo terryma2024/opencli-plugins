@@ -51,7 +51,9 @@ const cityMap: Record<string, string> = {
 export default async function query(dep: string, arr: string, date: string) {
   if (!dep || !arr || !date) {
     console.log('使用方法: opencli ctrip-flights query --dep <出发地> --arr <目的地> --date <日期>');
+    console.log('支持中文城市名或三位IATA机场编码（例如：PEK=北京，SHA=上海，CAN=广州）');
     console.log('示例: opencli ctrip-flights query --dep 哈尔滨 --arr 上海 --date 2026-05-06');
+    console.log('示例: opencli ctrip-flights query --dep PEK --arr CAN --date 2026-06-01');
     process.exit(1);
   }
 
@@ -119,7 +121,9 @@ export default async function query(dep: string, arr: string, date: string) {
     const flights: Flight[] = JSON.parse(result.trim());
     
     if (!flights || flights.length === 0) {
-      console.log('未查询到符合条件的航班信息');
+      console.log('❌ 未查询到符合条件的航班信息');
+      console.log('💡 若您输入的是中文城市名可能无法识别，建议直接使用三位IATA机场编码');
+      console.log('   例如：PEK(北京)、SHA(上海虹桥)、PVG(上海浦东)、CAN(广州)、CTU(成都)等');
       return;
     }
     
