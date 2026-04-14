@@ -1,6 +1,32 @@
 {
   "name": "ctrip-flights",
   "version": "0.1.0",
-  "description": "An opencli plugin: ctrip-flights",
-  "opencli": ">=1.7.3"
+  "description": "Query flight information from Ctrip, supports Chinese city names and IATA airport codes",
+  "opencli": ">=1.7.3",
+  "commands": {
+    "query": {
+      "description": "Query flight information from Ctrip",
+      "usage": "opencli ctrip-flights query --dep <出发地> --arr <目的地> --date <日期>",
+      "handler": "./query.js",
+      "options": {
+        "dep": {
+          "type": "string",
+          "description": "出发地（中文城市名或三位IATA机场编码）",
+          "alias": "d",
+          "required": true
+        },
+        "arr": {
+          "type": "string",
+          "description": "目的地（中文城市名或三位IATA机场编码）",
+          "alias": "a",
+          "required": true
+        },
+        "date": {
+          "type": "string",
+          "description": "出发日期（格式YYYY-MM-DD）",
+          "required": true
+        }
+      }
+    }
+  }
 }

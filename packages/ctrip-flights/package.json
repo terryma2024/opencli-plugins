@@ -6,15 +6,21 @@
   "keywords": ["opencli", "plugin", "ctrip", "flight", "travel", "airport", "iata"],
   "author": "Terry Ma",
   "license": "MIT",
+  "scripts": {
+    "test": "vitest run"
+  },
   "peerDependencies": {
     "@jackwener/opencli": ">=1.7.3"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0"
   },
   "opencli": {
     "commands": {
       "query": {
         "description": "Query flight information from Ctrip, supports Chinese city names or IATA airport codes",
         "usage": "opencli ctrip-flights query --dep <出发地> --arr <目的地> --date <日期>",
-        "handler": "./query.ts",
+        "handler": "./query.js",
         "options": {
           "dep": {
             "type": "string",
