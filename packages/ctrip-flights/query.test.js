@@ -24,21 +24,29 @@ describe('ctrip-flights query', () => {
     // 1. initial close
     // 2. open url
     // 3. wait time
-    // 4. eval document.title
-    // 5. eval body preview
-    // 6. eval flight data
-    // 7. final close
+    // 4~9. 3次滚动，每次scroll + wait
+    // 10. 滚动回顶部
+    // 11. eval document.title
+    // 12. eval flight data
+    // 13. final close
     vi.mocked(execSync)
       .mockReturnValueOnce('') // 1. initial close
       .mockReturnValueOnce('') // 2. open url
       .mockReturnValueOnce('') // 3. wait time
-      .mockReturnValueOnce('携程机票查询') // 4. title
-      .mockReturnValueOnce('航班查询结果') // 5. body preview
-      .mockReturnValueOnce(JSON.stringify([ // 6. flight data
-        { airline: '东方航空', flightNo: 'MU5101', depTime: '08:00', arrTime: '10:30', price: '¥680', cabin: '经济舱' },
-        { airline: '中国国航', flightNo: 'CA1501', depTime: '09:00', arrTime: '11:30', price: '¥720', cabin: '经济舱' },
+      // 3次滚动
+      .mockReturnValueOnce('') // scroll 1
+      .mockReturnValueOnce('') // wait 1
+      .mockReturnValueOnce('') // scroll 2
+      .mockReturnValueOnce('') // wait 2
+      .mockReturnValueOnce('') // scroll 3
+      .mockReturnValueOnce('') // wait 3
+      .mockReturnValueOnce('') // 10. 滚动回顶部
+      .mockReturnValueOnce('携程机票查询') // 11. title
+      .mockReturnValueOnce(JSON.stringify([ // 12. flight data
+        { airline: '东方航空', flightNo: 'MU5101', depTime: '08:00', arrTime: '10:30', price: '¥680', cabin: '经济舱2.8折' },
+        { airline: '中国国航', flightNo: 'CA1501', depTime: '09:00', arrTime: '11:30', price: '¥720', cabin: '经济舱2.8折' },
       ]))
-      .mockReturnValueOnce(''); // 7. final close
+      .mockReturnValueOnce(''); // 13. final close
 
     await query({ dep: '北京', arr: '上海', date: '2024-06-01' });
     
@@ -52,12 +60,19 @@ describe('ctrip-flights query', () => {
       .mockReturnValueOnce('') // 1. initial close
       .mockReturnValueOnce('') // 2. open url
       .mockReturnValueOnce('') // 3. wait time
-      .mockReturnValueOnce('携程机票查询') // 4. title
-      .mockReturnValueOnce('航班查询结果') // 5. body preview
-      .mockReturnValueOnce(JSON.stringify([ // 6. flight data
-        { airline: '南方航空', flightNo: 'CZ3101', depTime: '08:00', arrTime: '11:00', price: '¥880', cabin: '经济舱' },
+      // 3次滚动
+      .mockReturnValueOnce('') // scroll 1
+      .mockReturnValueOnce('') // wait 1
+      .mockReturnValueOnce('') // scroll 2
+      .mockReturnValueOnce('') // wait 2
+      .mockReturnValueOnce('') // scroll 3
+      .mockReturnValueOnce('') // wait 3
+      .mockReturnValueOnce('') // 10. 滚动回顶部
+      .mockReturnValueOnce('携程机票查询') // 11. title
+      .mockReturnValueOnce(JSON.stringify([ // 12. flight data
+        { airline: '南方航空', flightNo: 'CZ3101', depTime: '08:00', arrTime: '11:00', price: '¥880', cabin: '经济舱3.2折' },
       ]))
-      .mockReturnValueOnce(''); // 7. final close
+      .mockReturnValueOnce(''); // 13. final close
 
     await query({ dep: 'PEK', arr: 'CAN', date: '2024-06-01' });
     
@@ -80,10 +95,17 @@ describe('ctrip-flights query', () => {
       .mockReturnValueOnce('') // 1. initial close
       .mockReturnValueOnce('') // 2. open url
       .mockReturnValueOnce('') // 3. wait time
-      .mockReturnValueOnce('携程机票查询') // 4. title
-      .mockReturnValueOnce('暂无航班数据') // 5. body preview
-      .mockReturnValueOnce(JSON.stringify([])) // 6. empty flight data
-      .mockReturnValueOnce(''); // 7. final close
+      // 3次滚动
+      .mockReturnValueOnce('') // scroll 1
+      .mockReturnValueOnce('') // wait 1
+      .mockReturnValueOnce('') // scroll 2
+      .mockReturnValueOnce('') // wait 2
+      .mockReturnValueOnce('') // scroll 3
+      .mockReturnValueOnce('') // wait 3
+      .mockReturnValueOnce('') // 10. 滚动回顶部
+      .mockReturnValueOnce('携程机票查询') // 11. title
+      .mockReturnValueOnce(JSON.stringify([])) // 12. empty flight data
+      .mockReturnValueOnce(''); // 13. final close
 
     await query({ dep: '不知名城市', arr: '另一个不知名城市', date: '2024-06-01' });
     

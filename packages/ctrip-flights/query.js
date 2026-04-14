@@ -62,12 +62,18 @@ export default async function query(options) {
     console.log(`⌛ 等待页面加载...`);
     execSync('opencli browser wait time 15'); // 延长等待时间到15秒，确保航班列表加载完成
     
-    // 先输出页面标题和部分内容，调试用
-    const pageTitle = execSync(`opencli browser eval "document.title"`, { encoding: 'utf8' }).trim();
-    console.log(`📄 页面标题: ${pageTitle}`);
+    // 自动滚动加载更多内容，滚动3次，每次等待3秒
+    console.log(`🔄 自动滚动加载更多航班...`);
+    for (let i = 0; i < 3; i++) {
+      execSync('opencli browser eval "window.scrollTo(0, document.body.scrollHeight)"');
+      execSync('opencli browser wait time 3');
+    }
+    // 滚动回顶部
+    execSync('opencli browser eval "window.scrollTo(0, 0)"');
     
-    const pageContentPreview = execSync(`opencli browser eval "document.body.innerText.slice(0, 2000)"`, { encoding: 'utf8' }).trim();
-    console.log(`\n🔍 页面内容预览（前2000字符）:\n${pageContentPreview}\n`);
+    // 先输出页面标题和部分内容，调试用
+    const pageTitle = execSync('opencli browser eval "document.title"', { encoding: 'utf8' }).trim();
+    console.log(`📄 页面标题: ${pageTitle}`);
     
     const result = execSync(`opencli browser eval "(() => {
       const flights = [];
